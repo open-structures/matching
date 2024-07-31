@@ -98,16 +98,4 @@ public class MatchingTest {
         assertThat(matches.get(person2)).isEqualTo(task2);
         assertThat(matches.get(person3)).isEqualTo(task3);
     }
-
-    public static void main(String[] args) {
-        BiPredicate<String, String> qualificationsPredicate = (person, task) ->
-                (person.equals("Horza") && (task.equals("playing games") || task.equals("hula hooping"))) ||
-                        (person.equals("Gurgeh") && (task.equals("playing games") || task.equals("banana peeling"))) ||
-                        (person.equals("Zakalwe") && task.equals("banana peeling"));
-
-        Matching<String, String> matching = Matching.newMatching(qualificationsPredicate, newHashSet("Horza", "Gurgeh", "Zakalwe"), newHashSet("hula hooping", "playing games", "banana peeling"));
-        matching.findMatching();
-        System.out.println(matching.getMatches());
-
-    }
 }
