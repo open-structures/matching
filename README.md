@@ -4,6 +4,14 @@ highly performant push-relabel maximum flow algorithm.
 
 ## Quick start
 
+```xml
+<dependency>
+    <groupId>org.open-structures</groupId>
+    <artifactId>matching</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
 Let's say we have people and tasks. For example:
 
 ![Bipartite graph](images/bipartite-graph.png)
