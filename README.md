@@ -34,7 +34,7 @@ Here's how it can be expressed in code. First we define a 'task qualifications' 
 
 Next we create new `Matching` and find a maximum matching:
 
-    Matching<String, String> matching = Matching.newMatching(qualificationsPredicate, newHashSet("Horza", "Gurgeh", "Zakalwe"), newHashSet("hula hooping", "playing games", "banana peeling"));
+    Matching<String, String> matching = Matching.newMatching(qualificationsPredicate, Set.of("Horza", "Gurgeh", "Zakalwe"), Set.of("hula hooping", "playing games", "banana peeling"));
     matching.findMatching();
 
 Now we get our task assignments: 
