@@ -1,6 +1,6 @@
 # Matching
-Bipartite graph maximum matching algorithm implemented in Java. Treats the problem as a network flow problem and uses 
-highly performant push-relabel maximum flow algorithm.
+[Bipartite graph](https://en.wikipedia.org/wiki/Bipartite_graph) maximum matching algorithm implemented in Java. Treats the problem as a network flow problem and uses 
+highly performant [push-relabel maximum flow algorithm](https://en.wikipedia.org/wiki/Push%E2%80%93relabel_maximum_flow_algorithm).
 
 ## Quick start
 
@@ -12,35 +12,41 @@ highly performant push-relabel maximum flow algorithm.
 </dependency>
 ```
 
-Let's say we have people and tasks. For example:
+Let's say our problem looks like this:
 
 ![Bipartite graph](images/bipartite-graph.png)
 
-The edge between nodes means that the person is qualified to do a specific task, e.g. Horza can play games and hula-hoop.
-Here we assume that we only need one person for each task.
-A matching would represent task assignments to different people. A maximum matching (maximum number of assignments) could look like this:
+The edge between nodes means that they can be matched. A set of matches where the maximum set of nodes is matched could look like this:
 
-![Bipartite graph](images/matching.png)
+![Matching 1](images/matching1.png)
 
-Horza is hula-hooping, Gurgeh – playing games, and Zakalwe will peel bananas.
+or like this: 
+
+![Matching 2](images/matching2.png)
+
+There could be many options.
+
+---
 
 Here's how it can be expressed in code. First we define a 'task qualifications' predicate – a function that returns true when a person can do a task:
 
-    BiPredicate<String, String> qualificationsPredicate = (person, task) ->
-                (person.equals("Horza") && (task.equals("playing games") || task.equals("hula hooping"))) ||
-                        (person.equals("Gurgeh") && (task.equals("playing games") || task.equals("banana peeling"))) ||
-                        (person.equals("Zakalwe") && task.equals("banana peeling"));
+    BiPredicate<String, String> matchingPredicate = (u, v) ->
+                (u.equals("U1") && v.equals("V1")) ||
+                        (u.equals("U2") && (v.equals("V1") || v.equals("V2"))) ||
+                        (u.equals("U3") && (v.equals("V1") || v.equals("V3"))) ||
+                        (u.equals("U4") && (v.equals("V2") || v.equals("V3")));
 
 
 Next we create new `Matching` and find a maximum matching:
 
-    Matching<String, String> matching = Matching.newMatching(qualificationsPredicate, Set.of("Horza", "Gurgeh", "Zakalwe"), Set.of("hula hooping", "playing games", "banana peeling"));
+    Matching<String, String> matching = Matching.newMatching(matchingPredicate, Set.of("U1", "U2", "U3", "U4"), Set.of("V1", "V2", "V3"));
     matching.findMatching();
 
 Now we get our task assignments: 
 
     Map<String, String> matches = matching.getMatches();
-    matches.get("Horza"); // hula hooping
-    matches.get("Gurgeh"); // playing games
-    matches.get("Zakalwe"); // banana peeling
+    System.out.print(matches); // could print {U1=V1, U2=V2, U3=V3} or any other of maxumim matches
+
+
+
  
