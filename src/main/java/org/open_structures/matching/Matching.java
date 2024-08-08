@@ -34,10 +34,10 @@ public class Matching<U, V> {
 
     public Map<U, V> getMatches() {
         Map<U, V> matches = newHashMap();
-        for (Node wNode : flowNetwork.getSuccessors(flowNetwork.getSink())) {
+        for (Node vNode : flowNetwork.getSuccessors(flowNetwork.getSink())) {
             for (Node uNode : flowNetwork.getPredecessors(flowNetwork.getSource())) {
-                if (existsFlow(wNode, uNode)) {
-                    matches.put(((ValueNode<U>) uNode).getValue(), ((ValueNode<V>) wNode).getValue());
+                if (existsFlow(vNode, uNode)) {
+                    matches.put(((ValueNode<U>) uNode).getValue(), ((ValueNode<V>) vNode).getValue());
                 }
             }
         }
@@ -64,10 +64,10 @@ public class Matching<U, V> {
         }
 
         for (U u : uSet) {
-            flowNetwork.setArcCapacity(1, source, node(u));
+            Node uNode = node(u);
+            flowNetwork.setArcCapacity(1, source, uNode);
             for (V v : vSet) {
                 if (matchPredicate.test(u, v)) {
-                    Node uNode = node(u);
                     Node vNode = node(v);
                     flowNetwork.setArcCapacity(1, uNode, vNode);
                 }
@@ -78,9 +78,17 @@ public class Matching<U, V> {
     }
 
     private static final class SourceNode implements Node {
+        @Override
+        public String toString() {
+            return "Source";
+        }
     }
 
     private static final class SinkNode implements Node {
+        @Override
+        public String toString() {
+            return "Sink";
+        }
     }
 
     private boolean existsFlow(Node origin, Node destination) {
