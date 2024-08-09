@@ -5,9 +5,11 @@ import org.openstructures.flow.Node;
 import org.openstructures.flow.PushRelabelMaxFlow;
 import org.openstructures.flow.ValueNode;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Maps.newHashMap;
@@ -56,17 +58,34 @@ public class Matching<U, V> {
         checkNotNull(uSet);
         checkNotNull(vSet);
 
+        Map<V, Integer> vSetAndQty = new HashMap<>();
+        vSet.forEach(v -> vSetAndQty.put(v, 1));
+
+        return newMatching(matchPredicate, uSet, vSetAndQty);
+    }
+
+    /**
+     * Very similar to {@link #newMatching(BiPredicate, Set, Set)} except it allows to set quantity of elements in the V set.
+     * An example of when that is useful is when U represents people and V represents job roles and some of those roles need several people.
+     * For example, if role 1 requires 3 people and role 2 – one person, then it would be represented as {'role1':3, 'role2':1}
+     * If U set contains two people that qualify for role 1 then they both could be matched (assigned) to it.
+     */
+    public static <U, V> Matching<U, V> newMatching(BiPredicate<U, V> matchPredicate, Set<U> uSet, Map<V, Integer> vSetAndQty) {
+        checkNotNull(matchPredicate);
+        checkNotNull(uSet);
+        checkNotNull(vSetAndQty);
+
         final Node source = new SourceNode();
         final Node sink = new SinkNode();
         FlowNetwork flowNetwork = new FlowNetwork(source, sink);
-        for (V v : vSet) {
-            flowNetwork.setArcCapacity(1, node(v), sink);
+        for (Map.Entry<V, Integer> vAndQty : vSetAndQty.entrySet()) {
+            flowNetwork.setArcCapacity(vAndQty.getValue(), node(vAndQty.getKey()), sink);
         }
 
         for (U u : uSet) {
             Node uNode = node(u);
             flowNetwork.setArcCapacity(1, source, uNode);
-            for (V v : vSet) {
+            for (V v : vSetAndQty.keySet()) {
                 if (matchPredicate.test(u, v)) {
                     Node vNode = node(v);
                     flowNetwork.setArcCapacity(1, uNode, vNode);

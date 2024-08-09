@@ -98,4 +98,23 @@ public class MatchingTest {
         assertThat(matches.get(person2)).isEqualTo(task2);
         assertThat(matches.get(person3)).isEqualTo(task3);
     }
+
+    /**
+     * In this test we need 2 people for task1 and one person for task2.
+     */
+    @Test
+    public void shouldFindMatchingWithMultipleQuantitiesOfU() {
+        // given
+        Matching<String, String> matching = Matching.newMatching(skillsPredicate, newHashSet(person1, person2, person3), Map.of(task1, 2, task2, 1));
+        matching.findMatching();
+
+        // when
+        Map<String, String> matches = matching.getMatches();
+
+        // then
+        assertThat(matches.get(person1)).isEqualTo(task1);
+        assertThat(matches.get(person2)).isEqualTo(task1);
+        assertThat(matches.get(person3)).isEqualTo(task2);
+
+    }
 }
