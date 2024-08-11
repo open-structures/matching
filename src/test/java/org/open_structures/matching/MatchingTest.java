@@ -7,8 +7,10 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openstructures.flow.FlowNetwork;
 import org.openstructures.flow.Node;
+import org.openstructures.flow.PushRelabelMaxFlow;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiPredicate;
 
 import static com.google.common.collect.Sets.newHashSet;
@@ -19,37 +21,36 @@ import static org.openstructures.flow.ValueNode.node;
 @RunWith(MockitoJUnitRunner.class)
 public class MatchingTest {
 
-    private final String person1 = "person-1";
-    private final String person2 = "person-2";
-    private final String person3 = "person-3";
+    private final String u1 = "u1";
+    private final String u2 = "u2";
+    private final String u3 = "u3";
 
-    private final String task1 = "task-1";
-    private final String task2 = "task-2";
-    private final String task3 = "task-3";
+    private final String v1 = "v1";
+    private final String v2 = "v2";
+    private final String v3 = "v3";
 
     @Mock
-    private BiPredicate<String, String> skillsPredicate;
+    private BiPredicate<String, String> matchPredicate;
 
     @Before
     public void setUp() {
-        when(skillsPredicate.test(person1, task1)).thenReturn(true);
-        when(skillsPredicate.test(person1, task2)).thenReturn(false);
-        when(skillsPredicate.test(person1, task3)).thenReturn(false);
+        when(matchPredicate.test(u1, v1)).thenReturn(true);
+        when(matchPredicate.test(u1, v2)).thenReturn(false);
+        when(matchPredicate.test(u1, v3)).thenReturn(false);
 
-        when(skillsPredicate.test(person2, task1)).thenReturn(true);
-        when(skillsPredicate.test(person2, task2)).thenReturn(true);
-        when(skillsPredicate.test(person2, task3)).thenReturn(false);
+        when(matchPredicate.test(u2, v1)).thenReturn(true);
+        when(matchPredicate.test(u2, v2)).thenReturn(true);
+        when(matchPredicate.test(u2, v3)).thenReturn(false);
 
-        when(skillsPredicate.test(person3, task1)).thenReturn(false);
-        when(skillsPredicate.test(person3, task2)).thenReturn(true);
-        when(skillsPredicate.test(person3, task3)).thenReturn(true);
+        when(matchPredicate.test(u3, v1)).thenReturn(false);
+        when(matchPredicate.test(u3, v2)).thenReturn(true);
+        when(matchPredicate.test(u3, v3)).thenReturn(true);
     }
-
 
     @Test
     public void buildTeamNetwork() {
         // when
-        Matching<String, String> matching = Matching.newMatching(skillsPredicate, newHashSet(person1, person2, person3), newHashSet(task1, task2, task3));
+        Matching<String, String> matching = Matching.newMatching(matchPredicate, newHashSet(u1, u2, u3), newHashSet(v1, v2, v3));
 
         // then
         assertThat(matching).isNotNull();
@@ -63,58 +64,121 @@ public class MatchingTest {
         Node source = flowNetwork.getSource();
         Node sink = flowNetwork.getSink();
 
-        assertThat(flowNetwork.getArcCapacity(source, node(person1))).isEqualTo(1);
-        assertThat(flowNetwork.getArcCapacity(source, node(person2))).isEqualTo(1);
-        assertThat(flowNetwork.getArcCapacity(source, node(person3))).isEqualTo(1);
+        assertThat(flowNetwork.getArcCapacity(source, node(u1))).isEqualTo(1);
+        assertThat(flowNetwork.getArcCapacity(source, node(u2))).isEqualTo(1);
+        assertThat(flowNetwork.getArcCapacity(source, node(u3))).isEqualTo(1);
 
-        assertThat(flowNetwork.getArcCapacity(node(person1), node(task1))).isEqualTo(1);
-        assertThat(flowNetwork.getArcCapacity(node(person1), node(task2))).isEqualTo(0);
-        assertThat(flowNetwork.getArcCapacity(node(person1), node(task3))).isEqualTo(0);
+        assertThat(flowNetwork.getArcCapacity(node(u1), node(v1))).isEqualTo(1);
+        assertThat(flowNetwork.getArcCapacity(node(u1), node(v2))).isEqualTo(0);
+        assertThat(flowNetwork.getArcCapacity(node(u1), node(v3))).isEqualTo(0);
 
-        assertThat(flowNetwork.getArcCapacity(node(person2), node(task1))).isEqualTo(1);
-        assertThat(flowNetwork.getArcCapacity(node(person2), node(task2))).isEqualTo(1);
-        assertThat(flowNetwork.getArcCapacity(node(person2), node(task3))).isEqualTo(0);
+        assertThat(flowNetwork.getArcCapacity(node(u2), node(v1))).isEqualTo(1);
+        assertThat(flowNetwork.getArcCapacity(node(u2), node(v2))).isEqualTo(1);
+        assertThat(flowNetwork.getArcCapacity(node(u2), node(v3))).isEqualTo(0);
 
-        assertThat(flowNetwork.getArcCapacity(node(person3), node(task1))).isEqualTo(0);
-        assertThat(flowNetwork.getArcCapacity(node(person3), node(task2))).isEqualTo(1);
-        assertThat(flowNetwork.getArcCapacity(node(person3), node(task3))).isEqualTo(1);
+        assertThat(flowNetwork.getArcCapacity(node(u3), node(v1))).isEqualTo(0);
+        assertThat(flowNetwork.getArcCapacity(node(u3), node(v2))).isEqualTo(1);
+        assertThat(flowNetwork.getArcCapacity(node(u3), node(v3))).isEqualTo(1);
 
-        assertThat(flowNetwork.getArcCapacity(node(task1), sink)).isEqualTo(1);
-        assertThat(flowNetwork.getArcCapacity(node(task2), sink)).isEqualTo(1);
-        assertThat(flowNetwork.getArcCapacity(node(task3), sink)).isEqualTo(1);
+        assertThat(flowNetwork.getArcCapacity(node(v1), sink)).isEqualTo(1);
+        assertThat(flowNetwork.getArcCapacity(node(v2), sink)).isEqualTo(1);
+        assertThat(flowNetwork.getArcCapacity(node(v3), sink)).isEqualTo(1);
     }
 
     @Test
     public void shouldFindMatching() {
         // given
-        Matching<String, String> matching = Matching.newMatching(skillsPredicate, newHashSet(person1, person2, person3), newHashSet(task1, task2, task3));
+        Matching<String, String> matching = Matching.newMatching(matchPredicate, newHashSet(u1, u2, u3), newHashSet(v1, v2, v3));
         matching.findMatching();
 
         // when
         Map<String, String> matches = matching.getMatches();
 
         // then
-        assertThat(matches.get(person1)).isEqualTo(task1);
-        assertThat(matches.get(person2)).isEqualTo(task2);
-        assertThat(matches.get(person3)).isEqualTo(task3);
+        assertThat(matches.get(u1)).isEqualTo(v1);
+        assertThat(matches.get(u2)).isEqualTo(v2);
+        assertThat(matches.get(u3)).isEqualTo(v3);
     }
 
     /**
      * In this test we need 2 people for task1 and one person for task2.
      */
     @Test
-    public void shouldFindMatchingWithMultipleQuantitiesOfU() {
+    public void shouldFindMatchingWithMultiplesOfV() {
         // given
-        Matching<String, String> matching = Matching.newMatching(skillsPredicate, newHashSet(person1, person2, person3), Map.of(task1, 2, task2, 1));
+        Matching<String, String> matching = Matching.newMatching(matchPredicate, newHashSet(u1, u2, u3), Map.of(v1, 2, v2, 1));
         matching.findMatching();
 
         // when
         Map<String, String> matches = matching.getMatches();
 
         // then
-        assertThat(matches.get(person1)).isEqualTo(task1);
-        assertThat(matches.get(person2)).isEqualTo(task1);
-        assertThat(matches.get(person3)).isEqualTo(task2);
+        assertThat(matches.get(u1)).isEqualTo(v1);
+        assertThat(matches.get(u2)).isEqualTo(v1);
+        assertThat(matches.get(u3)).isEqualTo(v2);
+    }
 
+    @Test
+    public void shouldIncreaseUCount() {
+        // given
+        Matching<String, String> matching = Matching.newMatching(matchPredicate, newHashSet(u1, u2, u3), Map.of(v1, 2, v2, 1));
+
+        // when
+        matching.increaseUCount(u1, 2);
+
+        // then
+        FlowNetwork flowNetwork = matching.getFlowNetwork();
+        assertThat(flowNetwork.getArcCapacity(flowNetwork.getSource(), node(u1))).isEqualTo(3);
+        assertThat(flowNetwork.getArcCapacity(flowNetwork.getSource(), node(u2))).isEqualTo(1);
+        assertThat(flowNetwork.getArcCapacity(flowNetwork.getSource(), node(u3))).isEqualTo(1);
+    }
+
+    @Test
+    public void shouldSetMatch() {
+        // given
+        Matching<String, String> matching = Matching.newMatching(matchPredicate, Set.of(u1, u2, u3), Set.of(v1, v2, v3));
+
+        // when
+        matching.setMatch(u1, v1);
+        matching.setMatch(u3, v3);
+
+        // then
+        Map<String, String> matches = matching.getMatches();
+        assertThat(matches.get(u1)).isEqualTo(v1);
+        assertThat(matches.get(u3)).isEqualTo(v3);
+        assertThat(matches.keySet()).doesNotContain(u2);
+
+        // and when
+        matching.findMatching();
+
+        // then
+        matches = matching.getMatches();
+        assertThat(matches.get(u1)).isEqualTo(v1);
+        assertThat(matches.get(u2)).isEqualTo(v2);
+        assertThat(matches.get(u3)).isEqualTo(v3);
+    }
+
+    @Test
+    public void shouldGetAndRestoreFlowState() {
+        // given
+        Matching<String, String> matching = Matching.newMatching(matchPredicate, Set.of(u1, u2, u3), Set.of(v1, v2, v3));
+        matching.setMatch(u1, v1);
+
+        // when
+        PushRelabelMaxFlow.State state = matching.getState();
+        matching.setMatch(u2, v2);
+        matching.increaseUCount(u3, 1);
+        matching.restore(state);
+
+        // then everything is like it used to be
+        Map<String, String> matches = matching.getMatches();
+        assertThat(matches.get(u1)).isEqualTo(v1);
+        assertThat(matches.keySet()).doesNotContain(u2);
+        assertThat(matches.keySet()).doesNotContain(u3);
+
+        FlowNetwork flowNetwork = matching.getFlowNetwork();
+        assertThat(flowNetwork.getArcCapacity(flowNetwork.getSource(), node(u1))).isEqualTo(0); // because of the match
+        assertThat(flowNetwork.getArcCapacity(flowNetwork.getSource(), node(u2))).isEqualTo(1);
+        assertThat(flowNetwork.getArcCapacity(flowNetwork.getSource(), node(u3))).isEqualTo(1);
     }
 }
