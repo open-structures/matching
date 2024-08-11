@@ -59,13 +59,3 @@ In such cases if two people are qualified for the role, and it requires more tha
     System.out.print(matching.getMatches()); // {Person1=Role1, Person2=Role1, Person3=Role2}
 
 In this example the Role1 requires two people and Role2 – one person. The first two people qualify for both roles. Person3 can only be assigned to Role2.
-
-
-
-
-
-
-
-
-
- 
