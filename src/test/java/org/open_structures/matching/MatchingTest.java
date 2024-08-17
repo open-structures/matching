@@ -1,5 +1,6 @@
 package org.open_structures.matching;
 
+import com.google.common.collect.Table;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -92,12 +93,13 @@ public class MatchingTest {
         matching.findMatching();
 
         // when
-        Map<String, String> matches = matching.getMatches();
+        Table<String, String, Integer> matches = matching.getMatches();
 
         // then
-        assertThat(matches.get(u1)).isEqualTo(v1);
-        assertThat(matches.get(u2)).isEqualTo(v2);
-        assertThat(matches.get(u3)).isEqualTo(v3);
+        assertThat(matches.size()).isEqualTo(3);
+        assertThat(matches.get(u1, v1)).isEqualTo(1);
+        assertThat(matches.get(u2, v2)).isEqualTo(1);
+        assertThat(matches.get(u3, v3)).isEqualTo(1);
     }
 
     /**
@@ -110,12 +112,30 @@ public class MatchingTest {
         matching.findMatching();
 
         // when
-        Map<String, String> matches = matching.getMatches();
+        Table<String, String, Integer> matches = matching.getMatches();
 
         // then
-        assertThat(matches.get(u1)).isEqualTo(v1);
-        assertThat(matches.get(u2)).isEqualTo(v1);
-        assertThat(matches.get(u3)).isEqualTo(v2);
+        assertThat(matches.size()).isEqualTo(3);
+        assertThat(matches.get(u1, v1)).isEqualTo(1);
+        assertThat(matches.get(u2, v1)).isEqualTo(1);
+        assertThat(matches.get(u3, v2)).isEqualTo(1);
+    }
+
+    @Test
+    public void shouldFindMatchingWithMultiplesOfUAndV() {
+        // given
+        Matching<String, String> matching = Matching.newMatching(matchPredicate, newHashSet(u1, u2, u3), Map.of(v1, 2, v2, 2));
+        matching.increaseUCount(u1, 1);
+        matching.findMatching();
+
+        // when
+        Table<String, String, Integer> matches = matching.getMatches();
+
+        // then
+        assertThat(matches.size()).isEqualTo(3);
+        assertThat(matches.get(u1, v1)).isEqualTo(2);
+        assertThat(matches.get(u2, v2)).isEqualTo(1);
+        assertThat(matches.get(u3, v2)).isEqualTo(1);
     }
 
     @Test
@@ -129,6 +149,7 @@ public class MatchingTest {
         // then
         FlowNetwork flowNetwork = matching.getFlowNetwork();
         assertThat(flowNetwork.getArcCapacity(flowNetwork.getSource(), node(u1))).isEqualTo(3);
+        assertThat(flowNetwork.getArcCapacity(node(u1), node(v1))).isEqualTo(3);
         assertThat(flowNetwork.getArcCapacity(flowNetwork.getSource(), node(u2))).isEqualTo(1);
         assertThat(flowNetwork.getArcCapacity(flowNetwork.getSource(), node(u3))).isEqualTo(1);
     }
@@ -143,19 +164,20 @@ public class MatchingTest {
         matching.setMatch(u3, v3);
 
         // then
-        Map<String, String> matches = matching.getMatches();
-        assertThat(matches.get(u1)).isEqualTo(v1);
-        assertThat(matches.get(u3)).isEqualTo(v3);
-        assertThat(matches.keySet()).doesNotContain(u2);
+        Table<String, String, Integer> matches = matching.getMatches();
+        assertThat(matches.size()).isEqualTo(2);
+        assertThat(matches.get(u1, v1)).isEqualTo(1);
+        assertThat(matches.get(u3, v3)).isEqualTo(1);
 
         // and when
         matching.findMatching();
 
         // then
         matches = matching.getMatches();
-        assertThat(matches.get(u1)).isEqualTo(v1);
-        assertThat(matches.get(u2)).isEqualTo(v2);
-        assertThat(matches.get(u3)).isEqualTo(v3);
+        assertThat(matches.size()).isEqualTo(3);
+        assertThat(matches.get(u1, v1)).isEqualTo(1);
+        assertThat(matches.get(u2, v2)).isEqualTo(1);
+        assertThat(matches.get(u3, v3)).isEqualTo(1);
     }
 
     @Test
@@ -171,10 +193,9 @@ public class MatchingTest {
         matching.restore(state);
 
         // then everything is like it used to be
-        Map<String, String> matches = matching.getMatches();
-        assertThat(matches.get(u1)).isEqualTo(v1);
-        assertThat(matches.keySet()).doesNotContain(u2);
-        assertThat(matches.keySet()).doesNotContain(u3);
+        Table<String, String, Integer> matches = matching.getMatches();
+        assertThat(matches.size()).isEqualTo(1);
+        assertThat(matches.get(u1, v1)).isEqualTo(1);
 
         FlowNetwork flowNetwork = matching.getFlowNetwork();
         assertThat(flowNetwork.getArcCapacity(flowNetwork.getSource(), node(u1))).isEqualTo(0); // because of the match

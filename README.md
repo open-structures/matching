@@ -8,7 +8,7 @@ highly performant [push-relabel maximum flow algorithm](https://en.wikipedia.org
 <dependency>
     <groupId>org.open-structures</groupId>
     <artifactId>matching</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
 </dependency>
 ```
 
@@ -41,11 +41,7 @@ Next we create new `Matching` and find a maximum matching:
 
     Matching<String, String> matching = Matching.newMatching(matchingPredicate, Set.of("U1", "U2", "U3", "U4"), Set.of("V1", "V2", "V3"));
     matching.findMatching();
-
-Now we get our task assignments: 
-
-    Map<String, String> matches = matching.getMatches();
-    System.out.print(matches); // could print {U1=V1, U2=V2, U3=V3} or any other of maxumim matches
+    System.out.print(matching.getMatches()); // could print {U2={V1=1}, U4={V2=1}, U3={V3=1}} or any other of maxumim matches
 
 ### Setting count of elements in V
 
@@ -56,6 +52,6 @@ In such cases if two people are qualified for the role, and it requires more tha
 
     Matching<String, String> matching = Matching.newMatching(qualificationsPredicate, Set.of("Person1", "Person2", "Person3"), Map.of("Role1", 2, "Role2", 1));
     matching.findMatching();
-    System.out.print(matching.getMatches()); // {Person1=Role1, Person2=Role1, Person3=Role2}
+    System.out.print(matching.getMatches()); // {Person3={Role2=1}, Person1={Role1=1}, Person2={Role1=1}}
 
 In this example the Role1 requires two people and Role2 – one person. The first two people qualify for both roles. Person3 can only be assigned to Role2.
