@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.open-structures</groupId>
     <artifactId>matching</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
     <packaging>jar</packaging>
     <name>Open Structures - Matching</name>
     <description>Bipartite graph maximum matching algorithms written in Java</description>

@@ -1,5 +1,8 @@
 package org.open_structures.matching;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Table;
 import org.open_structures.memento.Restorable;
 import org.openstructures.flow.FlowNetwork;
 import org.openstructures.flow.Node;
@@ -13,7 +16,6 @@ import java.util.function.BiPredicate;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Objects.requireNonNull;
 import static org.openstructures.flow.ValueNode.node;
 
@@ -46,16 +48,28 @@ public class Matching<U, V> implements Restorable<PushRelabelMaxFlow.State> {
         Node uNode = node(u);
         checkArgument(flowNetwork.getSuccessors(source).contains(uNode) || flowNetwork.getPredecessors(source).contains(uNode));
 
-        int currentCapacity = flowNetwork.getArcCapacity(source, uNode);
-        flowNetwork.setArcCapacity(currentCapacity + increase, source, uNode);
+        flowNetwork.setArcCapacity(flowNetwork.getArcCapacity(source, uNode) + increase, source, uNode);
+        Sets.union(flowNetwork.getSuccessors(uNode), flowNetwork.getPredecessors(uNode))
+                .stream()
+                .filter(node -> !node.equals(source))
+                .forEach(node -> flowNetwork.setArcCapacity(flowNetwork.getArcCapacity(uNode, node) + increase, uNode, node));
     }
 
-    public Map<U, V> getMatches() {
-        Map<U, V> matches = newHashMap();
+    /**
+     * Returns matched elements of U and V sets with the matched count.
+     * For example, if the count of u1 is 2 and both instances have been matched for v3 then the table would have the value of 2
+     * in the row of u1 and column of v3.
+     * Not matched elements are not present in the table.
+     */
+    public Table<U, V, Integer> getMatches() {
+        Table<U, V, Integer> matches = HashBasedTable.create();
         for (Node vNode : flowNetwork.getSuccessors(flowNetwork.getSink())) {
             for (Node uNode : flowNetwork.getPredecessors(flowNetwork.getSource())) {
-                if (existsFlow(vNode, uNode)) {
-                    matches.put(((ValueNode<U>) uNode).getValue(), ((ValueNode<V>) vNode).getValue());
+                int c = flowNetwork.getArcCapacity(vNode, uNode);
+                if (c > 0) {
+                    U u = ((ValueNode<U>) uNode).getValue();
+                    V v = ((ValueNode<V>) vNode).getValue();
+                    matches.put(u, v, c);
                 }
             }
         }
@@ -174,14 +188,5 @@ public class Matching<U, V> implements Restorable<PushRelabelMaxFlow.State> {
         public String toString() {
             return "Sink";
         }
-    }
-
-    private boolean existsFlow(Node origin, Node destination) {
-        for (Node successor : flowNetwork.getSuccessors(origin)) {
-            if (successor.equals(destination)) {
-                return true;
-            }
-        }
-        return false;
     }
 }
